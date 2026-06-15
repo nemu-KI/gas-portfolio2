@@ -1,5 +1,4 @@
 function onFormSubmit(e) {
-  // 安全対策: エディタから直接実行された場合のクラッシュを防ぐ
   if (!e) {
     showMessage("エラー: この関数はフォーム送信時に自動実行されます。エディタから直接実行することはできません。");
     return;
@@ -8,11 +7,11 @@ function onFormSubmit(e) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   // ====================================================
-  // 1. フォームの回答1シートから最新行のデータを取得
+  // フォームの回答1シートから最新行のデータを取得
   // ====================================================
   const latestRowData = e.values;
 
-  // 動的に列の位置（インデックス）を取得するために、ヘッダー（1行目）を取得
+  // 動的に列の位置を取得するために、ヘッダーを取得
   const formSheet = ss.getSheetByName("フォームの回答 1");
   if (!formSheet) {
     showMessage("エラー: 「フォームの回答 1」シートが見つかりません。");
@@ -46,13 +45,13 @@ function onFormSubmit(e) {
     return;
   }
 
-  // 1. 現在の年月を取得 (例: "202606")
+  // 現在の年月を取得 (例: "202606")
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0"); // 1月が0から始まるため+1し、2桁にゼロ埋め
   const currentYearMonth = `${year}${month}`;
 
-  // 2 & 3. 申請履歴シートのA列（申請番号）から最大連番を探す
+  // 申請履歴シートのA列（申請番号）から最大連番を探す
   const lastRowHistory = historySheet.getLastRow();
   let maxSerialNumber = 0;
 
@@ -74,12 +73,12 @@ function onFormSubmit(e) {
     }
   }
 
-  // 4 & 5. 最大連番+1で新しい番号を生成し、3桁にゼロ埋め
+  // 最大連番+1で新しい番号を生成し、3桁にゼロ埋め
   const newSerialNumber = String(maxSerialNumber + 1).padStart(3, "0");
   const applicationNumber = `${currentYearMonth}-${newSerialNumber}`; // 完成: "202606-001"
 
   // ====================================================
-  // 2. 合計金額を計算
+  // 合計金額を計算
   // ====================================================
   const transitCost = Number(latestRowData[transitIndex]);
   const lodgingCost = Number(latestRowData[lodgingIndex]);
@@ -88,7 +87,7 @@ function onFormSubmit(e) {
   const totalAmount = transitCost + lodgingCost + otherCost;
 
   // ====================================================
-  // 3. 「申請履歴」シートに1行追記（申請番号を先頭、合計経費を備考の前に挿入）
+  // 「申請履歴」シートに1行追記（申請番号を先頭、合計経費を備考の前に挿入）
   // ====================================================
   // 備考より前のデータ、備考のデータを切り分けて組み替え
   const beforeRemarkData = latestRowData.slice(0, remarkIndex);
@@ -101,7 +100,7 @@ function onFormSubmit(e) {
   historySheet.appendRow(outputRowData);
 
   // ====================================================
-  // 4. メールフォルダを取得（なければ自動生成）
+  // メールフォルダを取得（なければ自動生成）
   // ====================================================
   const ssId = ss.getId();
   const ssFile = DriveApp.getFileById(ssId);
@@ -133,7 +132,7 @@ function onFormSubmit(e) {
   const fTotal = totalAmount.toLocaleString();
 
   // ====================================================
-  // 5. 申請者への受付確認テキストを生成・出力
+  // 申請者への受付確認テキストを生成・出力
   // ====================================================
   const applicantMailBody = `件名：出張経費申請を受け付けました
 
@@ -160,7 +159,7 @@ ${applicantName} 様
   mailFolder.createFile(`【申請者】${applicationNumber}_${applicantName}.txt`, applicantMailBody, MimeType.PLAIN_TEXT);
 
   // ====================================================
-  // 6. 経理担当者への申請内容通知テキストを生成・出力
+  // 経理担当者への申請内容通知テキストを生成・出力
   // ====================================================
   const keiriMailBody = `件名：出張経費申請が届きました
 
